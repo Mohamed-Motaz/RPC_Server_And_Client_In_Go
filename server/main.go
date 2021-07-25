@@ -18,9 +18,14 @@ type API struct{}
 
 var wg = sync.WaitGroup{}
 var database []Item
+var mu = sync.Mutex{};
 
 func (a *API) GetDB(empty string, reply *[]Item) error {
+	mu.Lock();
+	defer mu.Unlock();
+	fmt.Println("I am called to get the db now");
 	*reply = database
+	database = []Item{}; //clear the db for testing purposes
 	return nil
 }
 
@@ -37,12 +42,18 @@ func (a *API) GetByName(title string, reply *Item) error {
 }
 
 func (a *API) AddItem(item Item, reply *Item) error {
+	mu.Lock();
+	defer mu.Unlock();
+	fmt.Println("I am called to create this item ", item);
 	database = append(database, item)
+	fmt.Println("This is the current db after the addition ", database);
 	*reply = item
 	return nil
 }
 
 func (a *API) EditItem(item Item, reply *Item) error {
+	mu.Lock();
+	defer mu.Unlock();
 	var changed Item
 	found := false;
 	for idx, val := range database {
@@ -61,6 +72,8 @@ func (a *API) EditItem(item Item, reply *Item) error {
 }
 
 func (a *API) DeleteItem(item Item, reply *Item) error {
+	mu.Lock();
+	defer mu.Unlock();
 	var del Item
 	found := false;
 
@@ -96,6 +109,13 @@ func main() {
 	}
 	log.Printf("serving rpc on port %d", 4040)
 	wg.Add(1);
-	go http.Serve(listener, nil)
+	http.Serve(listener, logRequest(http.DefaultServeMux))
 	wg.Wait();
+}
+
+func logRequest(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
+		handler.ServeHTTP(w, r)
+	})
 }
