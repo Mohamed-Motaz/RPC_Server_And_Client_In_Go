@@ -1,6 +1,6 @@
 # Simple RPC_Server_And_Client_In_Go
 
-# Created to play around with servers handling RPC rathen than RESTful servers
+# Created to play around with servers handling RPC rather than RESTful servers
 
 
 ### Prerequisites
